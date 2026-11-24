@@ -4,7 +4,7 @@ Flags suspicious card transactions within seconds, for a fraud-ops team.
 
 Pipeline: Kafka -> Spark Structured Streaming -> Delta Lake (bronze/silver/gold) -> dbt -> dashboard.
 
-**Status: Week 1 done (producer + Kafka).** Next: Week 2 (bronze stream).
+**Status: Week 2 (bronze stream) built.** Next: Week 3 (rules engine).
 
 ## What is in Week 1
 
@@ -39,6 +39,23 @@ Pipeline: Kafka -> Spark Structured Streaming -> Delta Lake (bronze/silver/gold)
 7. Check messages arrived:
    `docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic transactions --from-beginning --max-messages 5`
 8. `make down` to stop and clean up.
+
+## Week 2: bronze stream (Kafka -> Delta)
+
+Spark runs inside Docker, so nothing extra to install on your laptop.
+
+- `spark/bronze_stream.py`: reads Kafka, writes the Delta table `bronze/transactions` with a checkpoint
+- `spark/verify_bronze.py`: counts duplicates and compares with Kafka
+- Bronze keeps the raw message (`raw_value`) plus `kafka_partition` / `kafka_offset`, so bad records stay visible
+
+Run it:
+
+1. `docker compose up -d`, then create the topic (see "Run it" above)
+2. Terminal A: `docker compose run --rm --name bronze spark bronze_stream.py`
+3. Terminal B: `python producer/producer.py --rate 50 --duration 60`
+4. Kill Spark mid-run: `docker kill bronze`
+5. Start it again (step 2), let it catch up
+6. `docker compose run --rm spark verify_bronze.py` must print `RESULT: PASS`
 
 ## Producer options
 

@@ -22,7 +22,7 @@ def parse_args():
     p.add_argument("--duration", type=float, default=0, help="seconds to run (0 = no limit)")
     p.add_argument("--max-events", type=int, default=0, help="stop after N events (0 = no limit)")
     p.add_argument("--fraud-rate", type=float, default=0.02)
-    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--seed", type=int, default=None)
     p.add_argument("--dry-run", action="store_true", help="print JSON lines, do not use Kafka")
     return p.parse_args()
 
